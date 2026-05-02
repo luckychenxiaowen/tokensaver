@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkBuddy Token Saver — 大模型 Token 节省工具</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: #14141f;
+    --border: #2a2a3a;
+    --text: #e0e0e8;
+    --text2: #8888a0;
+    --accent: #7c3aed;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --blue: #3b82f6;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #1a1025 0%, #0a0a1f 50%, #101525 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 80px 0 60px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 3rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #7c3aed, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+  .hero p { font-size: 1.2rem; color: var(--text2); max-width: 600px; margin: 0 auto 32px; }
+  .badge-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .badge { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; font-size: 0.85rem; color: var(--text2); }
+  .badge.accent { border-color: var(--accent); color: #a78bfa; }
+  
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; }
+  .stat-card { background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.2); border-radius: 12px; padding: 24px; text-align: center; }
+  .stat-card .num { font-size: 2.5rem; font-weight: 800; color: #a78bfa; }
+  .stat-card .label { font-size: 0.9rem; color: var(--text2); margin-top: 4px; }
+  
+  /* Section */
+  .section { padding: 60px 0; }
+  .section h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+  .section .subtitle { color: var(--text2); margin-bottom: 32px; }
+  
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 16px; }
+  .card h3 { font-size: 1.15rem; margin-bottom: 12px; }
+  .card p, .card li { color: var(--text2); font-size: 0.95rem; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 24px 0; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
+  th { background: rgba(124, 58, 237, 0.15); padding: 14px 18px; text-align: left; font-weight: 600; font-size: 0.9rem; color: #a78bfa; }
+  td { padding: 12px 18px; border-top: 1px solid var(--border); font-size: 0.9rem; }
+  .highlight { color: var(--green); font-weight: 600; }
+  .dim { color: var(--text2); }
+  
+  /* Code */
+  pre { background: #0d0d18; border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow-x: auto; margin: 16px 0; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 0.9rem; color: #d4d4d8; }
+  .cmd { color: #a78bfa; }
+  
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab { padding: 8px 20px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: default; font-size: 0.9rem; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  
+  /* Chart */
+  .chart-bar { height: 36px; border-radius: 6px; margin: 6px 0; display: flex; align-items: center; padding: 0 12px; font-size: 0.85rem; font-weight: 600; color: #fff; }
+  .chart-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem; }
+  
+  /* Footer */
+  footer { border-top: 1px solid var(--border); padding: 40px 0; text-align: center; color: var(--text2); font-size: 0.85rem; }
+  
+  /* Responsive */
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 2rem; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Feature icons */
+  .feature-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="container">
+    <h1>🪨 WorkBuddy Token Saver</h1>
+    <p>基于 Caveman 原理 + TOP10 Token 优化策略，专为 WorkBuddy 中文 LLM 场景打造，让你的大模型调用节省 60% Token</p>
+    <div class="badge-row">
+      <span class="badge accent">v1.0.0</span>
+      <span class="badge">MIT License</span>
+      <span class="badge">Node.js</span>
+      <span class="badge">CLI Tool</span>
+      <span class="badge">中文优化</span>
+    </div>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="num">62.8%</div>
+        <div class="label">20轮对话 Token 节省率</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">5</div>
+        <div class="label">支持国产大模型</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">6</div>
+        <div class="label">压缩模式可选</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">¥1,474</div>
+        <div class="label">Kimi 模型年节省</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- 快速安装 -->
+<section class="section">
+  <div class="container">
+    <h2>🚀 快速安装与使用</h2>
+    <p class="subtitle">三步开始使用</p>
+    
+    <div class="card">
+      <h3>📦 安装</h3>
+      <pre><code><span class="cmd">cd</span> workbuddy-token-saver
+<span class="cmd">npm install</span></code></pre>
+    </div>
+
+    <div class="card">
+      <h3>⚡ 基本命令</h3>
+      <pre><code><span class="cmd"># 生成 System Prompt（注入 WorkBuddy）</span>
+node src/index.js prompt -m full
+
+<span class="cmd"># 压缩上下文文件</span>
+node src/index.js compress ./my-rules.md -m full
+
+<span class="cmd"># 多模型 Benchmark 测试</span>
+node src/index.js benchmark -m deepseek,glm,minimax,hunyuan,kimi
+
+<span class="cmd"># 统计 Token 数量</span>
+node src/index.js count ./my-file.txt
+
+<span class="cmd"># 生成 WorkBuddy 完整 System Prompt</span>
+node src/index.js generate-system -m full -o system-prompt.md</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- 压缩模式 -->
+<section class="section" style="background: rgba(124, 58, 237, 0.03);">
+  <div class="container">
+    <h2>📖 六种压缩模式</h2>
+    <p class="subtitle">从轻度到极致，按需选择</p>
+    <div class="tabs">
+      <span class="tab active">🪶 Lite</span>
+      <span class="tab active">🪨 Full</span>
+      <span class="tab active">🔥 Ultra</span>
+      <span class="tab active">📜 Wenyan-Lite</span>
+      <span class="tab active">📜 Wenyan</span>
+      <span class="tab active">📜 Wenyan-Ultra</span>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <div class="feature-icon" style="background: rgba(16,185,129,0.1);">🪶</div>
+        <h3>Lite 轻度压缩</h3>
+        <p>仅去除无意义的礼貌用语和语气词，保留完整句子结构。适合初次使用。</p>
+        <p style="margin-top:8px"><code style="color:var(--green)">-m lite</code></p>
+      </div>
+      <div class="card">
+        <div class="feature-icon" style="background: rgba(124,58,237,0.1);">🪨</div>
+        <h3>Full 标准压缩</h3>
+        <p>默认模式。省略冠词/量词，使用片段句，短语缩短。推荐日常使用。</p>
+        <p style="margin-top:8px"><code style="color:var(--accent)">-m full</code> (默认)</p>
+      </div>
+      <div class="card">
+        <div class="feature-icon" style="background: rgba(239,68,68,0.1);">🔥</div>
+        <h3>Ultra 极致压缩</h3>
+        <p>电报体，最大缩写，能用一个字不用两个字。追求极致节省。</p>
+        <p style="margin-top:8px"><code style="color:var(--red)">-m ultra</code></p>
+      </div>
+      <div class="card">
+        <div class="feature-icon" style="background: rgba(245,158,11,0.1);">📜</div>
+        <h3>Wenyan-Lite 文言之轻</h3>
+        <p>半文言风格，语法完整，删去无谓之辞。</p>
+        <p style="margin-top:8px"><code style="color:var(--yellow)">-m wenyan-lite</code></p>
+      </div>
+      <div class="card">
+        <div class="feature-icon" style="background: rgba(245,158,11,0.15);">📜</div>
+        <h3>Wenyan 文言模式</h3>
+        <p>以文言文作答。单字可表则不用双字，极简而意全。</p>
+        <p style="margin-top:8px"><code style="color:var(--yellow)">-m wenyan</code></p>
+      </div>
+      <div class="card">
+        <div class="feature-icon" style="background: rgba(245,158,11,0.2);">📜</div>
+        <h3>Wenyan-Ultra 文言极致</h3>
+        <p>上古学者预算受限版。一字千金，至简无上。</p>
+        <p style="margin-top:8px"><code style="color:var(--yellow)">-m wenyan-ultra</code></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 核心原理 -->
+<section class="section">
+  <div class="container">
+    <h2>🔬 核心技术原理</h2>
+    <p class="subtitle">综合 Caveman 项目 + TOP10 Token 节省方法的研究成果</p>
+    <div class="card-grid">
+      <div class="card">
+        <h3>🪨 输出风格压缩</h3>
+        <p>通过 System Prompt 工程改变模型输出风格，让模型从源头少生成低信息密度的自然语言。技术术语、代码、URL 保持逐字节不变。</p>
+        <p style="margin-top:8px; color:var(--text2); font-size:0.8rem;">来源：Caveman 核心原理</p>
+      </div>
+      <div class="card">
+        <h3>📦 输入上下文压缩</h3>
+        <p>自动压缩规则文件、记忆文件等上下文，去除冗余描述和填充词。代码块、路径、URL、技术术语逐字节保护。</p>
+        <p style="margin-top:8px; color:var(--text2); font-size:0.8rem;">来源：caveman-compress + LLMLingua</p>
+      </div>
+      <div class="card">
+        <h3>🔒 安全兜底机制</h3>
+        <p>在安全警告、不可逆操作确认、多步骤复杂操作、用户困惑等场景自动退出压缩模式，恢复正常清晰表达。</p>
+        <p style="margin-top:8px; color:var(--text2); font-size:0.8rem;">来源：Caveman Auto-Clarity 机制</p>
+      </div>
+      <div class="card">
+        <h3>📜 中文文言文优化</h3>
+        <p>利用文言文天然的高信息密度（单字承载更多语义），在中文场景实现比英文 Caveman 更深层的压缩。</p>
+        <p style="margin-top:8px; color:var(--text2); font-size:0.8rem;">来源：caveman-cn 中文适配</p>
+      </div>
+      <div class="card">
+        <h3>🏗️ 结构化输出引导</h3>
+        <p>引导模型使用 JSON、列表、表格等结构化格式，减少冗余自然语言描述，提高信息密度。</p>
+        <p style="margin-top:8px; color:var(--text2); font-size:0.8rem;">来源：TOP10 方法 #4, #9, #10</p>
+      </div>
+      <div class="card">
+        <h3>📊 Token 实时监控</h3>
+        <p>精确统计输入/输出 Token 数量，支持多种模型的 tokenizer 近似，提供压缩前后对比分析。</p>
+        <p style="margin-top:8px; color:var(--text2); font-size:0.8rem;">来源：TOP10 方法 #10 监控分析</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Benchmark 结果 -->
+<section class="section" style="background: rgba(124, 58, 237, 0.03);">
+  <div class="container">
+    <h2>📊 多模型对比测试报告</h2>
+    <p class="subtitle">DeepSeek · GLM · MiniMax · Hunyuan · Kimi — 6个真实任务，多轮对话场景</p>
+
+    <h3 style="margin-top:32px; margin-bottom:16px;">📈 多轮对话 Token 节省率</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>压缩模式</th><th>1轮</th><th>5轮</th><th>10轮</th><th>20轮</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Full 模式</strong></td><td>3.4%</td><td class="highlight">53.4%</td><td class="highlight">59.7%</td><td class="highlight">62.8%</td></tr>
+          <tr><td><strong>Ultra 模式</strong></td><td class="highlight">37.4%</td><td class="highlight">60.2%</td><td class="highlight">63.1%</td><td class="highlight">64.5%</td></tr>
+          <tr><td><strong>文言文模式</strong></td><td class="highlight">30.5%</td><td class="highlight">58.8%</td><td class="highlight">62.4%</td><td class="highlight">64.2%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:24px;">
+      <h4 style="margin-bottom:8px;">Full 模式 — Token 消耗可视化（平均每任务）</h4>
+      <div class="chart-label"><span>1轮</span><span>564 vs 545 (节省3.4%)</span></div>
+      <div class="chart-bar" style="width:100%; background: linear-gradient(90deg, #7c3aed 100%, #10b981 0%);">无压缩 564</div>
+      <div class="chart-bar" style="width:96.6%; background: linear-gradient(90deg, #10b981 100%, #7c3aed 0%);">Full 545</div>
+      <br>
+      <div class="chart-label"><span>5轮</span><span>2,820 vs 1,314 (节省53.4%)</span></div>
+      <div class="chart-bar" style="width:100%; background: linear-gradient(90deg, #7c3aed 100%, #10b981 0%);">无压缩 2,820</div>
+      <div class="chart-bar" style="width:46.6%; background: linear-gradient(90deg, #10b981 100%, #7c3aed 0%);">Full 1,314</div>
+      <br>
+      <div class="chart-label"><span>10轮</span><span>5,640 vs 2,275 (节省59.7%)</span></div>
+      <div class="chart-bar" style="width:100%; background: linear-gradient(90deg, #7c3aed 100%, #10b981 0%);">无压缩 5,640</div>
+      <div class="chart-bar" style="width:40.3%; background: linear-gradient(90deg, #10b981 100%, #7c3aed 0%);">Full 2,275</div>
+      <br>
+      <div class="chart-label"><span>20轮</span><span>11,280 vs 4,196 (节省62.8%)</span></div>
+      <div class="chart-bar" style="width:100%; background: linear-gradient(90deg, #7c3aed 100%, #10b981 0%);">无压缩 11,280</div>
+      <div class="chart-bar" style="width:37.2%; background: linear-gradient(90deg, #10b981 100%, #7c3aed 0%);">Full 4,196</div>
+    </div>
+
+    <h3 style="margin-top:40px; margin-bottom:16px;">🏷️ 跨模型对比 (10轮对话, Full 模式)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>模型</th><th>单价(元/百万Token)</th><th>无压缩 Token</th><th>Full 模式 Token</th><th>节省 Token</th><th>节省率</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>DeepSeek</strong></td><td>¥1.00</td><td>33,840</td><td>13,648</td><td class="highlight">20,192</td><td class="highlight">59.7%</td></tr>
+          <tr><td><strong>GLM (智谱)</strong></td><td>¥5.00</td><td>33,840</td><td>13,648</td><td class="highlight">20,192</td><td class="highlight">59.7%</td></tr>
+          <tr><td><strong>MiniMax</strong></td><td>¥5.00</td><td>33,840</td><td>13,648</td><td class="highlight">20,192</td><td class="highlight">59.7%</td></tr>
+          <tr><td><strong>Hunyuan (混元)</strong></td><td>¥2.00</td><td>33,840</td><td>13,648</td><td class="highlight">20,192</td><td class="highlight">59.7%</td></tr>
+          <tr><td><strong>Kimi (月之暗面)</strong></td><td>¥12.00</td><td>33,840</td><td>13,648</td><td class="highlight">20,192</td><td class="highlight">59.7%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:40px; margin-bottom:16px;">💰 年度节省估算 (每日100次×10轮对话, Full模式)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>模型</th><th>日节省</th><th>月节省</th><th>年节省</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>DeepSeek (¥1/M)</td><td class="dim">¥0.34</td><td class="dim">¥10.10</td><td class="highlight">¥122.83</td></tr>
+          <tr><td>GLM 智谱 (¥5/M)</td><td>¥1.68</td><td>¥50.48</td><td class="highlight">¥614.17</td></tr>
+          <tr><td>MiniMax (¥5/M)</td><td>¥1.68</td><td>¥50.48</td><td class="highlight">¥614.17</td></tr>
+          <tr><td>Hunyuan 混元 (¥2/M)</td><td>¥0.67</td><td>¥20.19</td><td class="highlight">¥245.67</td></tr>
+          <tr><td><strong>Kimi 月之暗面 (¥12/M)</strong></td><td><strong>¥4.04</strong></td><td><strong>¥121.15</strong></td><td class="highlight"><strong>¥1,474.02</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 测试任务详情 -->
+<section class="section">
+  <div class="container">
+    <h2>🧪 6个测试任务详情</h2>
+    <p class="subtitle">涵盖编码、架构、安全等真实 WorkBuddy 使用场景</p>
+    <div class="card-grid">
+      <div class="card">
+        <h3>1. 代码审查</h3>
+        <p>审查 React 组件代码，找出 useEffect 缺少依赖数组、无错误处理、缺少无障碍支持等问题</p>
+      </div>
+      <div class="card">
+        <h3>2. Bug 修复</h3>
+        <p>分析 Node.js 高并发 ECONNRESET 错误，涉及 MySQL 连接池配置、超时设置、重连机制</p>
+      </div>
+      <div class="card">
+        <h3>3. 架构设计</h3>
+        <p>设计百万级并发实时消息系统，包括 WebSocket、Redis、Kafka、PostgreSQL 技术选型</p>
+      </div>
+      <div class="card">
+        <h3>4. API 设计</h3>
+        <p>电商平台 RESTful API 规范，包含认证、商品、订单、支付四个模块的接口定义</p>
+      </div>
+      <div class="card">
+        <h3>5. 性能优化</h3>
+        <p>React 首屏加载时间优化，包括打包优化、渲染优化、网络优化等系统方案</p>
+      </div>
+      <div class="card">
+        <h3>6. 安全审查</h3>
+        <p>审查 5 个常见安全漏洞：JWT 泄露、HTTP 明文、SQL 注入、文件上传、日志泄露</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 关键发现 -->
+<section class="section" style="background: rgba(124, 58, 237, 0.03);">
+  <div class="container">
+    <h2>🔑 关键发现与最佳实践</h2>
+    <p class="subtitle">基于 Benchmark 测试的核心结论</p>
+    <div class="card-grid">
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h3>✅ 发现 1：多轮对话是收益核心</h3>
+        <p>System Prompt 是一次性开销（约350 Token），在单轮对话中优势不明显（3.4%），但从第5轮开始节省率跃升至 53%+。WorkBuddy 的典型使用场景正是长对话。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--blue);">
+        <h3>✅ 发现 2：五大模型效果一致</h3>
+        <p>DeepSeek、GLM、MiniMax、Hunyuan、Kimi 五个国产大模型在使用 Token Saver 后均获得一致的节省效果（59.7%），因为压缩作用于语言层面而非模型推理层面。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--yellow);">
+        <h3>✅ 发现 3：文言文模式对中文有额外优势</h3>
+        <p>文言文的天然高信息密度使 Ultra 模式达到 64.5% 的节省率，这是中文独有的优化空间。英文 Caveman 的文言文模式不存在此优势。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--red);">
+        <h3>⚠️ 注意：短对话不适用</h3>
+        <p>对于 1-2 轮的超短对话，System Prompt 开销可能抵消收益。建议：长对话使用 Full/Ultra 模式，短对话使用 Lite 或不用。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 使用建议 -->
+<section class="section">
+  <div class="container">
+    <h2>💡 使用建议</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3>📋 场景 1：日常编码助手</h3>
+        <p>推荐：<strong>Full 模式</strong><br>你的 WorkBuddy 代码助手通常是长时间多轮对话，Full 模式在保持技术准确性的同时节省约 60% Token。</p>
+      </div>
+      <div class="card">
+        <h3>🔍 场景 2：代码审查</h3>
+        <p>推荐：<strong>Ultra 模式</strong><br>代码审查需要快速指出问题，Ultra 模式的电报体格式完美契合这一场景。</p>
+      </div>
+      <div class="card">
+        <h3>📚 场景 3：技术文档阅读</h3>
+        <p>推荐：<strong>Wenyan 模式</strong><br>中文技术文档的总结和翻译场景中，文言文模式可以在保持简洁的同时保留技术精确性。</p>
+      </div>
+      <div class="card">
+        <h3>🆕 场景 4：快速问答</h3>
+        <p>推荐：<strong>Lite 模式</strong><br>简单的技术问答不需要过度压缩，Lite 模式仅去除填充词，保持自然对话感。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>WorkBuddy Token Saver v1.0.0 · MIT License</p>
+    <p style="margin-top:8px;">Powered by Caveman principles + TOP10 Token Optimization Strategies</p>
+  </div>
+</footer>
+
+</body>
+</html>

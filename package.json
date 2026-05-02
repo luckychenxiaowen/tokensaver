@@ -1,0 +1,33 @@
+{
+  "name": "workbuddy-token-saver",
+  "version": "1.0.0",
+  "description": "WorkBuddy Token 节省工具 — 基于 Caveman 原理 + 10大Token优化策略，专为中文LLM场景打造",
+  "main": "src/index.js",
+  "bin": {
+    "token-saver": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "compress": "node src/index.js compress",
+    "benchmark": "node src/index.js benchmark",
+    "monitor": "node src/index.js monitor",
+    "test": "node tests/run.js"
+  },
+  "keywords": [
+    "token",
+    "llm",
+    "cost-saving",
+    "workbuddy",
+    "caveman",
+    "prompt-engineering"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.1.0",
+    "fs-extra": "^11.2.0",
+    "js-tiktoken": "^1.0.19",
+    "ora": "^5.4.1"
+  }
+}

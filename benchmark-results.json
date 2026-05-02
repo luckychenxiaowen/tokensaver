@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-05-02T02:02:48.758Z",
+  "models": [
+    "deepseek",
+    "glm",
+    "minimax",
+    "hunyuan",
+    "kimi"
+  ],
+  "tasks": [
+    "code-review",
+    "bug-fix",
+    "architecture",
+    "api-design",
+    "performance",
+    "security"
+  ],
+  "modes": [
+    "full",
+    "ultra",
+    "wenyan"
+  ],
+  "turns": [
+    1,
+    5,
+    10,
+    20
+  ]
+}
