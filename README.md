@@ -1,7 +1,8 @@
 # 🪨 WorkBuddy Token Saver
 
 > 基于 [Caveman](https://github.com/JuliusBrussee/caveman) 原理 + TOP10 Token 优化策略  
-> 专为 WorkBuddy 中文 LLM 场景打造的大模型 Token 节省工具
+> 专为 WorkBuddy 中文 LLM 场景打造的大模型 Token 节省工具  
+> GitHub: [luckychenxiaowen/tokensaver](https://github.com/luckychenxiaowen/tokensaver)
 
 ## 📊 效果速览
 
