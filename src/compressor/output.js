@@ -111,14 +111,26 @@ MAX compression. Telegram style. All abbreviations. One line if possible.
 };
 
 /**
- * 生成 System Prompt
+ * 生成 System Prompt（增强版：支持 tokcut 风格英文模式 + tokensaver 中文模式）
+ * 
+ * 支持的模式：
+ *   中文: cn-lite, cn-full, cn-ultra, wenyan-lite, wenyan, wenyan-ultra
+ *         以及简写: lite→cn-lite, full→cn-full, ultra→cn-ultra
+ *   英文: en-lite, en-full, en-ultra (tokcut 移植)
+ * 
+ * @param {string} mode - 压缩模式
+ * @param {boolean} english - 是否使用英文模式（兼容旧接口）
+ * @returns {string} System Prompt 文本
  */
-function generateSystemPrompt(mode = 'full', english = false) {
+function generateSystemPrompt(mode = 'cn-full', english = false) {
+  // 兼容旧接口的 english 参数
   if (english) {
-    return CAVEMAN_PROMPTS[mode] || CAVEMAN_PROMPTS['full'];
+    const enMap = { 'lite': 'lite', 'full': 'full', 'ultra': 'ultra' };
+    const key = enMap[mode] || 'full';
+    return CAVEMAN_PROMPTS[key];
   }
-  
-  // 中文模式映射
+
+  // 中文模式映射（短名 → 全名）
   const cnModeMap = {
     'lite': 'cn-lite',
     'full': 'cn-full',
@@ -126,8 +138,19 @@ function generateSystemPrompt(mode = 'full', english = false) {
     'wenyan-lite': 'cn-wenyan-lite',
     'wenyan': 'cn-wenyan',
     'wenyan-ultra': 'cn-wenyan-ultra',
+    // 全名直接支持
+    'cn-lite': 'cn-lite',
+    'cn-full': 'cn-full',
+    'cn-ultra': 'cn-ultra',
+    'cn-wenyan-lite': 'cn-wenyan-lite',
+    'cn-wenyan': 'cn-wenyan',
+    'cn-wenyan-ultra': 'cn-wenyan-ultra',
+    // tokcut 风格英文模式（也映射到英文 CAVEMAN_PROMPTS）
+    'en-lite': 'lite',
+    'en-full': 'full',
+    'en-ultra': 'ultra',
   };
-  
+
   const key = cnModeMap[mode] || 'cn-full';
   return CAVEMAN_PROMPTS[key];
 }

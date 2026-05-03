@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  tokensaver:
+    build: .
+    image: tokensaver:latest
+    container_name: tokensaver
+    ports:
+      - "8800:8800"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:8800/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3

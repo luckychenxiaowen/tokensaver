@@ -1,5 +1,15 @@
 node_modules/
 dist/
 *.log
+.env
+.env.local
 .DS_Store
 Thumbs.db
+# Test outputs
+v2-err.txt
+v2-result.txt
+test-out.txt
+test-output.txt
+# Cache files
+*.db
+.tokensaver-cache.json

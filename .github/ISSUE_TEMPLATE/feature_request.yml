@@ -1,0 +1,24 @@
+name: Feature Request
+description: Suggest a feature for tokensaver
+labels: ["enhancement"]
+body:
+  - type: textarea
+    attributes:
+      label: Problem statement
+      description: What problem would this feature solve?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed solution
+      description: Describe the feature you'd like to see.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions you've thought about.
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Any other context, screenshots, or references.

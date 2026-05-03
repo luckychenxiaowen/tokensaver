@@ -1,0 +1,45 @@
+name: Bug Report
+description: Report a bug in tokensaver
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Steps to trigger the bug.
+      placeholder: |
+        1. Run `npm run serve`
+        2. Send a request to ...
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+  - type: input
+    attributes:
+      label: tokensaver version
+      placeholder: e.g. 2.0.0
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Node.js version
+      placeholder: e.g. 20.11.0
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: OS
+      placeholder: e.g. macOS 14, Windows 11, Ubuntu 22.04
+  - type: textarea
+    attributes:
+      label: Error logs
+      description: Paste any error messages or logs.
+      render: shell

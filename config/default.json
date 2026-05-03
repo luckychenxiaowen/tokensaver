@@ -1,0 +1,22 @@
+{
+  "compressor": {
+    "enabled": true,
+    "level": "cn-full"
+  },
+  "promptCompressor": {
+    "enabled": false,
+    "mode": "safe"
+  },
+  "cache": {
+    "enabled": true,
+    "backend": "memory",
+    "similarity_threshold": 0.92,
+    "ttl_minutes": 60,
+    "max_entries": 10000
+  },
+  "server": {
+    "port": 8800,
+    "host": "0.0.0.0",
+    "logLevel": 2
+  }
+}

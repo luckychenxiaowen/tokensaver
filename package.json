@@ -1,13 +1,15 @@
 {
-  "name": "workbuddy-token-saver",
-  "version": "1.0.0",
-  "description": "WorkBuddy Token 节省工具 — 基于 Caveman 原理 + 10大Token优化策略，专为中文LLM场景打造",
+  "name": "tokensaver",
+  "version": "2.0.0",
+  "description": "tokensaver — LLM Token 节省工具 (融合 tokcut 代理层 + Caveman 压缩 + 语义缓存 + 中文优化)",
   "main": "src/index.js",
   "bin": {
+    "tokensaver": "./src/index.js",
     "token-saver": "./src/index.js"
   },
   "scripts": {
     "start": "node src/index.js",
+    "serve": "node src/index.js serve",
     "compress": "node src/index.js compress",
     "benchmark": "node src/index.js benchmark",
     "monitor": "node src/index.js monitor",
@@ -17,9 +19,12 @@
     "token",
     "llm",
     "cost-saving",
-    "workbuddy",
+    "proxy",
     "caveman",
-    "prompt-engineering"
+    "prompt-engineering",
+    "cache",
+    "deepseek",
+    "openai"
   ],
   "license": "MIT",
   "dependencies": {

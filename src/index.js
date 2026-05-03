@@ -16,8 +16,8 @@ const program = new Command();
 
 program
   .name('token-saver')
-  .description('🚀 WorkBuddy Token 节省工具 — 让你的大模型调用更省钱')
-  .version('1.0.0');
+  .description('🚀 tokensaver — 融合 tokcut 的 LLM Token 节省工具 (Proxy + CLI)')
+  .version('2.0.0');
 
 // ============ compress 命令 ============
 program
@@ -96,6 +96,76 @@ program
     } else {
       console.log(sys);
     }
+  });
+
+// ============ serve 命令 (NEW: tokcut 移植) ============
+program
+  .command('serve')
+  .description('启动透明代理服务器 (零代码侵入，自动压缩)')
+  .option('-p, --port <port>', '监听端口', '8800')
+  .option('-h, --host <host>', '监听地址', '0.0.0.0')
+  .option('-l, --level <level>', '压缩级别: cn-lite|cn-full|cn-ultra|wenyan|en-full', 'cn-full')
+  .option('--input-compress', '启用输入压缩')
+  .option('--input-mode <mode>', '输入压缩模式: safe|aggressive', 'safe')
+  .option('--no-cache', '禁用语义缓存')
+  .option('--cache-ttl <minutes>', '缓存过期时间(分钟)', '60')
+  .option('-c, --config <file>', '配置文件路径')
+  .action(async (options) => {
+    const { ProxyServer } = require('./server');
+    const path = require('path');
+    const fs = require('fs');
+
+    // 加载配置
+    let config = {};
+    const configPath = options.config || path.join(__dirname, '..', 'config', 'default.json');
+    if (fs.existsSync(configPath)) {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    }
+
+    const server = new ProxyServer({
+      port: parseInt(options.port) || config.server?.port || 8800,
+      host: options.host || config.server?.host || '0.0.0.0',
+      compressor: {
+        enabled: true,
+        level: options.level || config.compressor?.level || 'cn-full',
+      },
+      promptCompressor: {
+        enabled: options.inputCompress || config.promptCompressor?.enabled || false,
+        mode: options.inputMode || config.promptCompressor?.mode || 'safe',
+      },
+      cache: {
+        enabled: options.cache !== false,
+        ttl_minutes: parseInt(options.cacheTtl) || config.cache?.ttl_minutes || 60,
+        similarity_threshold: config.cache?.similarity_threshold || 0.92,
+        backend: config.cache?.backend || 'memory',
+        max_entries: config.cache?.max_entries || 10000,
+      },
+      logLevel: config.server?.logLevel ?? 2,
+    });
+
+    console.log(chalk.cyan('\n  ╔══════════════════════════════════════════════╗'));
+    console.log(chalk.cyan('  ║   tokensaver Proxy v2.0  (tokcut merged)    ║'));
+    console.log(chalk.cyan('  ╚══════════════════════════════════════════════╝\n'));
+
+    // 优雅退出
+    process.on('SIGINT', async () => {
+      console.log(chalk.yellow('\n  Shutting down...'));
+      await server.stop();
+      process.exit(0);
+    });
+
+    process.on('SIGTERM', async () => {
+      await server.stop();
+      process.exit(0);
+    });
+
+    await server.start();
+
+    console.log(chalk.green(`\n  ✅ Proxy server running at http://${server.host}:${server.port}`));
+    console.log(chalk.dim(`  Health check: http://localhost:${server.port}/health`));
+    console.log(chalk.dim(`  Stats:        http://localhost:${server.port}/stats`));
+    console.log(chalk.dim(`\n  Usage: Set your OpenAI client's base_url to http://localhost:${server.port}/v1`));
+    console.log(chalk.dim(`  Headers: X-Provider-URL, X-Tokensaver-Level, X-Tokensaver-Compress, etc.\n`));
   });
 
 program.parse();
